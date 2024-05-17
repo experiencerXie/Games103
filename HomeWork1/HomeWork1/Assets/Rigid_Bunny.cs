@@ -1,19 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.PlayerLoop;
 
 public class Rigid_Bunny : MonoBehaviour 
 {
-	bool launched 		= false;
-	float dt 			= 0.015f;
-	Vector3 v 			= new Vector3(0, 0, 0);	// velocity
-	Vector3 w 			= new Vector3(0, 0, 0);	// angular velocity
-	
-	float mass;									// mass
-	Matrix4x4 I_ref;							// reference inertia
-
-	float linear_decay	= 0.999f;				// for velocity decay
-	float angular_decay	= 0.98f;				
-	float restitution 	= 0.5f;					// for collision
 
 
 	// Use this for initialization
@@ -66,6 +56,19 @@ public class Rigid_Bunny : MonoBehaviour
 	void Collision_Impulse(Vector3 P, Vector3 N)
 	{
 	}
+	
+	bool launched 		= false;
+	float dt 			= 0.015f;
+	Vector3 v 			= new Vector3(0, 0, 0);	// velocity
+	Vector3 w 			= new Vector3(0, 0, 0);	// angular velocity
+	
+	float mass = 1;									// mass
+	Vector3 g 			= new Vector3(0, -9.8f, 0);	// angular velocity
+	Matrix4x4 I_ref;							// reference inertia
+
+	float linear_decay	= 0.999f;				// for velocity decay
+	float angular_decay	= 0.98f;				
+	float restitution 	= 0.5f;					// for collision
 
 	// Update is called once per frame
 	void Update () 
@@ -80,6 +83,7 @@ public class Rigid_Bunny : MonoBehaviour
 		if(Input.GetKey("l"))
 		{
 			v = new Vector3 (5, 2, 0);
+			w = new Vector3(0, 1000, 0);
 			launched=true;
 		}
 
@@ -95,6 +99,15 @@ public class Rigid_Bunny : MonoBehaviour
 		Vector3 x    = transform.position;
 		//Update angular status
 		Quaternion q = transform.rotation;
+
+		if (launched)
+		{
+			v = v + Time.deltaTime * g;
+			x = x + v * Time.deltaTime;
+			q = Quaternion.Euler(q.eulerAngles + w * Time.deltaTime);
+			w = angular_decay * w;
+			v = linear_decay * v;
+		}
 
 		// Part IV: Assign to the object
 		transform.position = x;
