@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿
+using UnityEngine;
 using System.Collections;
 using UnityEngine.PlayerLoop;
 
@@ -59,10 +60,11 @@ public class Rigid_Bunny : MonoBehaviour
 	
 	bool launched 		= false;
 	float dt 			= 0.015f;
+	float timeTotal = 0;
 	Vector3 v 			= new Vector3(0, 0, 0);	// velocity
 	Vector3 w 			= new Vector3(0, 0, 0);	// angular velocity
 	
-	float mass = 1;									// mass
+	float mass;									// mass
 	Vector3 g 			= new Vector3(0, -9.8f, 0);	// angular velocity
 	Matrix4x4 I_ref;							// reference inertia
 
@@ -87,30 +89,41 @@ public class Rigid_Bunny : MonoBehaviour
 			launched=true;
 		}
 
-		// Part I: Update velocities
+		timeTotal += Time.deltaTime;
 
+		if (timeTotal / dt <= 0)
+			return;
+		
+		int updateTimes = Mathf.FloorToInt(timeTotal / dt);
+		timeTotal = timeTotal % dt;
 
-		// Part II: Collision Impulse
-		Collision_Impulse(new Vector3(0, 0.01f, 0), new Vector3(0, 1, 0));
-		Collision_Impulse(new Vector3(2, 0, 0), new Vector3(-1, 0, 0));
-
-		// Part III: Update position & orientation
-		//Update linear status
-		Vector3 x    = transform.position;
-		//Update angular status
-		Quaternion q = transform.rotation;
-
-		if (launched)
+		for (int i = 0; i < updateTimes; i++)
 		{
-			v = v + Time.deltaTime * g;
-			x = x + v * Time.deltaTime;
-			q = Quaternion.Euler(q.eulerAngles + w * Time.deltaTime);
-			w = angular_decay * w;
-			v = linear_decay * v;
-		}
+			// Part I: Update velocities
 
-		// Part IV: Assign to the object
-		transform.position = x;
-		transform.rotation = q;
+
+			// Part II: Collision Impulse
+			Collision_Impulse(new Vector3(0, 0.01f, 0), new Vector3(0, 1, 0));
+			Collision_Impulse(new Vector3(2, 0, 0), new Vector3(-1, 0, 0));
+
+			// Part III: Update position & orientation
+			//Update linear status
+			Vector3 x    = transform.position;
+			//Update angular status
+			Quaternion q = transform.rotation;
+
+			if (launched)
+			{
+				v = v + Time.deltaTime * g;
+				x = x + v * Time.deltaTime;
+				q = Quaternion.Euler(q.eulerAngles + w * Time.deltaTime);
+				w = angular_decay * w;
+				v = linear_decay * v;
+			}
+
+			// Part IV: Assign to the object
+			transform.position = x;
+			transform.rotation = q;
+		}
 	}
 }
