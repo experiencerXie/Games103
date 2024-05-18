@@ -168,12 +168,12 @@ public class Rigid_Bunny : MonoBehaviour
 		if (launched == false)
 			return;
 
-		// timeTotal += Time.deltaTime;
-		//
-		// if (timeTotal / dt <= 0)
-		// 	return;
+		timeTotal += Time.deltaTime;
+		
+		if (timeTotal / dt <= 0)
+			return;
 
-		int updateTimes = 1;//Mathf.FloorToInt(timeTotal / dt);
+		int updateTimes = Mathf.FloorToInt(timeTotal / dt);
 		timeTotal = timeTotal % dt;
 
 		for (int i = 0; i < updateTimes; i++)
