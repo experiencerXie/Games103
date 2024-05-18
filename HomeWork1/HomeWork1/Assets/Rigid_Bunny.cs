@@ -5,7 +5,21 @@ using UnityEngine.PlayerLoop;
 
 public class Rigid_Bunny : MonoBehaviour 
 {
+	bool launched 		= false;
+	float dt 			= 0.015f;
+	float timeTotal = 0;
+	Vector3 v 			= new Vector3(0, 0, 0);	// velocity
+	Vector3 w 			= new Vector3(0, 0, 0);	// angular velocity
+	
+	float mass;									// mass
+	Matrix4x4 I_ref;							// reference inertia
 
+	float linear_decay	= 0.999f;				// for velocity decay
+	float angular_decay	= 0.98f;				
+	float restitution 	= 0.5f;					// for collision
+	float restitution_T = 0.2f;
+	
+	Vector3 gravity =new Vector3(0.0f, -9.8f, 0.0f);
 
 	// Use this for initialization
 	void Start () 
@@ -63,7 +77,7 @@ public class Rigid_Bunny : MonoBehaviour
 		Vector3[] vertices = mesh.vertices;
 		for (int i=0; i<vertices.Length; i++)
 		{
-			var Rri = R * vertices[0];
+			var Rri = R * vertices[i];
 			var vecticePos = pos + (Vector3)Rri;
 			
 			//check the vertice is in plane
@@ -79,7 +93,7 @@ public class Rigid_Bunny : MonoBehaviour
 			var vin = Vector3.Dot(tmpV, N) * N;
 			var vit = tmpV - vin;
 			var vinNew = -restitution * vin;
-			var vitNew = Mathf.Max(1 - 0.5f * (1 + restitution) * Mathf.Abs(vin.magnitude) / Mathf.Abs(vit.magnitude), 0) * vit;
+			var vitNew = Mathf.Max(1 - restitution_T * (1 + restitution) * Mathf.Abs(vin.magnitude) / Mathf.Abs(vit.magnitude), 0) * vit;
 			var viNew = vinNew + vitNew;
 			
 			//calculate Impulse
@@ -116,20 +130,6 @@ public class Rigid_Bunny : MonoBehaviour
 			break;
 		}
 	}
-	
-	bool launched 		= false;
-	float dt 			= 0.015f;
-	float timeTotal = 0;
-	Vector3 v 			= new Vector3(0, 0, 0);	// velocity
-	Vector3 w 			= new Vector3(0, 0, 0);	// angular velocity
-	
-	float mass;									// mass
-	Vector3 g 			= new Vector3(0, -9.8f, 0);	// angular velocity
-	Matrix4x4 I_ref;							// reference inertia
-
-	float linear_decay	= 0.999f;				// for velocity decay
-	float angular_decay	= 0.98f;				
-	float restitution 	= 0.5f;					// for collision
 
 	// Update is called once per frame
 	void Update () 
@@ -162,7 +162,7 @@ public class Rigid_Bunny : MonoBehaviour
 		for (int i = 0; i < updateTimes; i++)
 		{
 			// Part I: Update velocities
-			v = v + dt * g;
+			v = v + dt * gravity;
 			v = linear_decay * v;
 			w = angular_decay * w;
 
@@ -177,7 +177,9 @@ public class Rigid_Bunny : MonoBehaviour
 			//Update angular status
 			Quaternion q = transform.rotation;
 			
-			q = Quaternion.Euler(q.eulerAngles + w * dt);
+			Vector3 wt = dt * w;
+			Quaternion dq = new Quaternion(wt.x, wt.y, wt.z, 0.0f) * q;
+			q.Set(q.x + dq.x, q.y + dq.y, q.z + dq.z, q.w + dq.w);
 
 			// Part IV: Assign to the object
 			transform.position = x;
