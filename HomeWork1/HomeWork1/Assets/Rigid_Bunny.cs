@@ -75,60 +75,77 @@ public class Rigid_Bunny : MonoBehaviour
 		
 		Mesh mesh = GetComponent<MeshFilter>().mesh;
 		Vector3[] vertices = mesh.vertices;
+		
+		Vector3 collisionPos = Vector3.zero;
+		int collisionNum = 0;
+		
+
 		for (int i=0; i<vertices.Length; i++)
 		{
-			var Rri = R * vertices[i];
-			var vecticePos = pos + (Vector3)Rri;
+			var tmpRri = R * vertices[i];
+			var vecticePos = pos + (Vector3)tmpRri;
 			
 			//check the vertice is in plane
 			if (Vector3.Dot(vecticePos - P, N) >= 0)
 				continue;
 			
 			//check the velocity is directed in plane
-			var tmpV = v + Vector3.Cross(w, Rri);
+			var tmpV = v + Vector3.Cross(w, tmpRri);
 			if (Vector3.Dot(tmpV, N) >= 0)
 				continue;
-			
-			//calculate vertice's new velocity
-			var vin = Vector3.Dot(tmpV, N) * N;
-			var vit = tmpV - vin;
-			var vinNew = -restitution * vin;
-			var vitNew = Mathf.Max(1 - restitution_T * (1 + restitution) * Mathf.Abs(vin.magnitude) / Mathf.Abs(vit.magnitude), 0) * vit;
-			var viNew = vinNew + vitNew;
-			
-			//calculate Impulse
-			var I = R * I_ref * R.transpose;
-			var Rris = Get_Cross_Matrix(Rri);
-			var kTmp = Rris * I.inverse * Rris;
-			Matrix4x4 k = Matrix4x4.zero;
-			k [0, 0] = 1 / mass - kTmp[0, 0]; 
-			k [0, 1] = - kTmp[0, 1]; 
-			k [0, 2] = - kTmp[0, 2]; 
-			k [0, 3] = - kTmp[0, 3]; 
-			
-			k [1, 0] = - kTmp[1, 0]; 
-			k [1, 1] = 1 / mass - kTmp[1, 1]; 
-			k [1, 2] = - kTmp[1, 2]; 
-			k [1, 3] = - kTmp[1, 3]; 
-			
-			k [2, 0] = - kTmp[2, 0]; 
-			k [2, 1] = - kTmp[2, 1]; 
-			k [2, 2] = 1 / mass - kTmp[2, 2]; 
-			k [2, 3] = - kTmp[2, 3]; 
-			
-			k [3, 0] = - kTmp[3, 0];
-			k [3, 1] = - kTmp[3, 1];
-			k [3, 2] = - kTmp[3, 2];
-			k [3, 3] = 1 / mass - kTmp[3, 3];
-			
-			var j = k.inverse * (viNew - tmpV);
 
-			Vector3 vtmp = (1 / mass * j);
-			v = v + vtmp;
-			Vector3 wtmp = I.inverse * (Rris * j);
-			w = w + wtmp;
-			break;
+			collisionPos += vertices[i];
+			collisionNum++;
 		}
+
+		if (collisionNum <= 0)
+			return;
+
+		Vector3 ri = collisionPos / collisionNum;
+		
+		var Rri = R * ri;
+		
+		//check the velocity is directed in plane
+		var vi = v + Vector3.Cross(w, Rri);
+		
+		//calculate vertice's new velocity
+		var vin = Vector3.Dot(vi, N) * N;
+		var vit = vi - vin;
+		var vinNew = -restitution * vin;
+		var vitNew = Mathf.Max(1 - restitution_T * (1 + restitution) * Mathf.Abs(vin.magnitude) / Mathf.Abs(vit.magnitude), 0) * vit;
+		var viNew = vinNew + vitNew;
+		
+		//calculate Impulse
+		var I = R * I_ref * R.transpose;
+		var Rris = Get_Cross_Matrix(Rri);
+		var kTmp = Rris * I.inverse * Rris;
+		Matrix4x4 k = Matrix4x4.zero;
+		k [0, 0] = 1 / mass - kTmp[0, 0]; 
+		k [0, 1] = - kTmp[0, 1]; 
+		k [0, 2] = - kTmp[0, 2]; 
+		k [0, 3] = - kTmp[0, 3]; 
+		
+		k [1, 0] = - kTmp[1, 0]; 
+		k [1, 1] = 1 / mass - kTmp[1, 1]; 
+		k [1, 2] = - kTmp[1, 2]; 
+		k [1, 3] = - kTmp[1, 3]; 
+		
+		k [2, 0] = - kTmp[2, 0]; 
+		k [2, 1] = - kTmp[2, 1]; 
+		k [2, 2] = 1 / mass - kTmp[2, 2]; 
+		k [2, 3] = - kTmp[2, 3]; 
+		
+		k [3, 0] = - kTmp[3, 0];
+		k [3, 1] = - kTmp[3, 1];
+		k [3, 2] = - kTmp[3, 2];
+		k [3, 3] = 1 / mass - kTmp[3, 3];
+		
+		var j = k.inverse * (viNew - vi);
+
+		Vector3 vtmp = (1 / mass * j);
+		v = v + vtmp;
+		Vector3 wtmp = I.inverse * (Rris * j);
+		w = w + wtmp;
 	}
 
 	// Update is called once per frame
