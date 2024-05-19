@@ -156,6 +156,7 @@ public class Rigid_Bunny : MonoBehaviour
 		{
 			transform.position = new Vector3 (0, 0.6f, 0);
 			restitution = 0.5f;
+			gravity =new Vector3(0.0f, -9.8f, 0.0f);
 			launched=false;
 		}
 		if(Input.GetKey("l"))
