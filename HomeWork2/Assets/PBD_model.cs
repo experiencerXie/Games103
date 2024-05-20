@@ -26,6 +26,8 @@ public class PBD_model: MonoBehaviour {
 			X[j*n+i] =new Vector3(5-10.0f*i/(n-1), 0, 5-10.0f*j/(n-1));
 			UV[j*n+i]=new Vector3(i/(n-1.0f), j/(n-1.0f));
 		}
+
+		X[0] = Vector3.one;
 		int t=0;
 		for(int j=0; j<n-1; j++)
 		for(int i=0; i<n-1; i++)	
