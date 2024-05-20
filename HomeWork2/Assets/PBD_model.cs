@@ -9,6 +9,8 @@ public class PBD_model: MonoBehaviour {
 	float[] 	L;
 	Vector3[] 	V;
 
+	private Vector3 gravity = new Vector3(0, -9.8f, 0);
+
 
 	// Use this for initialization
 	void Start () 
@@ -157,6 +159,7 @@ public class PBD_model: MonoBehaviour {
 		for(int i=0; i<X.Length; i++)
 		{
 			if(i==0 || i==20)	continue;
+			X[i] += t * t * gravity;
 			//Initial Setup
 			//...
 		}
